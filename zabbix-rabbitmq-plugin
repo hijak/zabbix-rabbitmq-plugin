@@ -1,21 +1,22 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
-import yaml, os, sys, requests, argparse, json, urllib, time, sqlite3, logging, datetime
+import yaml, os, sys, requests, argparse, json, time, sqlite3, logging, datetime
+from urllib.parse import quote_plus
 
 
 def cacheConnect():
     try:
         return sqlite3.connect('%s/zabbix-rabbitmq-cache.db' % (os.path.dirname(os.path.realpath(__file__))))
-    except Exception, e:
-        print "There was an error connecting to the cache database."
-        print str(e)
+    except Exception as e:
+        print("There was an error connecting to the cache database.")
+        print(str(e))
         sys.exit()
 
 
 def zabbix_fail():
 
-    print "ZBX_NOTSUPPORTED"
+    print("ZBX_NOTSUPPORTED")
     sys.exit(1)
 
 
@@ -24,11 +25,11 @@ def getConfigs():
     try:
 
         stream = open("%s/config.yml" % (os.path.dirname(os.path.realpath(__file__))), "r")
-        return yaml.load(stream)
+        return yaml.safe_load(stream)
 
-    except Exception, e:
+    except Exception as e:
 
-        print "Could not find the config.yml file."
+        print("Could not find the config.yml file.")
         sys.exit(1)
 
 
@@ -39,7 +40,7 @@ def callApi(path, host, port, username, password):
         url = 'http://%s:%s%s' % (host,str(port), path)
         r = requests.get(url, auth=(username, password))
 
-    except Exception, e:
+    except Exception as e:
 
         logging.error('failed while retrieving api data from "%s": %s' % (url,str(e)))
         zabbix_fail()
@@ -143,7 +144,7 @@ def main():
 
                 queues.append({'{#HOSTNAME}' : args.hostname, '{#VHOSTNAME}': queue['vhost'], '{#QUEUENAME}': queue['name']})
 
-            print json.dumps({'data': queues})
+            print(json.dumps({'data': queues}))
 
         if args.cluster_nodes:
 
@@ -154,7 +155,7 @@ def main():
 
                 nodes.append({'{#HOSTNAME}' : args.hostname, '{#NODENAME}': node['name'] })
 
-            print json.dumps({'data': nodes})
+            print(json.dumps({'data': nodes}))
 
 
     if args.command == "check":
@@ -174,7 +175,7 @@ def main():
 
         if args.check_method == "queue":
 
-            url = '/api/queues/%s' % (urllib.quote_plus(args.vhost))
+            url = '/api/queues/%s' % (quote_plus(args.vhost))
 
         if args.check_method == "node":
 
@@ -217,7 +218,7 @@ def main():
 
             if args.metric.split('.')[0] == "message_stats" and not args.metric.split('.')[-1].endswith("_details"):
 
-                print 0
+                print(0)
                 sys.exit()
 
             else:
@@ -226,7 +227,7 @@ def main():
                 zabbix_fail()
 
         logging.info('%s - returning %s %s %s: %s' % (datetime.datetime.now().isoformat(), str(args.check_method), str(args.name), str(args.metric), str(data)))
-        print data
+        print(data)
 
 if __name__ == "__main__": main()
 
