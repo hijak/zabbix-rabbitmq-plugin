@@ -37,7 +37,7 @@ def callApi(path, host, port, username, password):
 
     try:
 
-        url = 'http://%s:%s%s' % (host,str(port), path)
+        url = 'https://%s:%s%s' % (host,str(port), path)
         r = requests.get(url, auth=(username, password))
 
     except Exception as e:
